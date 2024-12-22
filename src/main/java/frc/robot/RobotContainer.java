@@ -31,7 +31,7 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   final CommandXboxController driverXbox = new CommandXboxController(0);
   // The robot's subsystems and commands are defined here...
-  private final Swerve drivebase = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
+  private final Swerve drivebase = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve"));
 
   // Applies deadbands and inverts controls because joysticks
   // are back-right positive while robot
@@ -93,22 +93,6 @@ public class RobotContainer {
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
-  // Derive the heading axis with math!
-  SwerveInputStream driveDirectAngleSim = driveAngularVelocitySim.copy()
-      .withControllerHeadingAxis(() -> Math.sin(
-          driverXbox.getRawAxis(
-              2) * Math.PI)
-          * (Math.PI * 2),
-          () -> Math.cos(
-              driverXbox.getRawAxis(
-                  2) * Math.PI)
-              *
-              (Math.PI * 2))
-      .headingWhile(true);
-
-  Command driveFieldOrientedDirectAngleSim = drivebase.driveFieldOriented(driveDirectAngleSim);
-
-  Command driveSetpointGenSim = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngleSim);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -127,11 +111,8 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // (Condition) ? Return-On-True : Return-on-False
-    drivebase.setDefaultCommand(!RobotBase.isSimulation() ? driveFieldOrientedDirectAngle : driveFieldOrientedDirectAngleSim);
+    drivebase.setDefaultCommand(driveFieldOrientedDirectAngle);
 
-    if (Robot.isSimulation()) {
-      driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
-    }
     if (DriverStation.isTest()) {
       drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
 
